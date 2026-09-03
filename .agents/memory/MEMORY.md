@@ -1,0 +1,1 @@
+- [Uploaded brand assets](uploaded-brand-assets.md) — asset metadata URLs may not survive handoff; verify local public copies render before shipping.

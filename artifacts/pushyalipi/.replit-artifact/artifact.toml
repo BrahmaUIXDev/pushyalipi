@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Pushyalipi Kundli"
+description = "A modern Vedic astrology workspace that generates authentic kundlis, preserves user history, and exports polished basic or premium reports from real chart data."
+version = "1.0.0"
+id = "artifacts/pushyalipi"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21591
+
+[services.development]
+run = "pnpm --filter @workspace/pushyalipi run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pushyalipi", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/pushyalipi/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21591"
+BASE_PATH = "/"

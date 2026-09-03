@@ -1,0 +1,342 @@
+PUSHYALIPI — PART 1 FINAL CRITICAL FIXES
+DO ONLY THESE 3 TASKS
+
+The main Part 1 UI redesign is already implemented.
+
+DO NOT start another full redesign.
+
+DO NOT redesign the whole application again.
+
+DO NOT modify the astrology engine.
+
+DO NOT modify database/backend unnecessarily.
+
+DO NOT add payments.
+
+DO NOT add subscriptions.
+
+Do ONLY the following 3 critical tasks.
+
+==================================================
+TASK 1 — VERIFY AND FIX REAL PDF OUTPUT
+==================================================
+
+This is the highest priority.
+
+The source code contains the existing real Kundli calculation and KundliPrintReport system.
+
+I need you to verify the ACTUAL GENERATED PDF, not just inspect the source code.
+
+Use the existing application normally:
+
+1. Open Pushyalipi.
+2. Enter a real birth input.
+3. Generate the Kundli.
+4. Open the complete Kundli report.
+5. Use the existing PDF/Print/Export action.
+6. Generate the actual PDF through the application/browser flow.
+7. Inspect the generated PDF.
+
+DO NOT use the existing bundled demo/sample PDF as proof of correctness.
+
+The bundled demo PDF may contain demo/sample information and is NOT the final verification.
+
+The actual generated PDF must contain the REAL data generated from the exact birth input used.
+
+Compare the on-screen Kundli report with the generated PDF.
+
+Verify at minimum:
+
+- Name
+- Birth date
+- Birth time
+- Birth place
+- Latitude/longitude if displayed
+- Lagna
+- Moon Sign
+- Nakshatra
+- Sun Sign
+- Ayanamsha
+- Panchanga
+- D1/Rashi
+- D9/Navamsa
+- D10/Dashamsa
+- Shodashvarga
+- Planetary positions
+- Bhava
+- Vimshottari Dasha
+- Ashtakavarga
+- Panchadha Maitri
+- Navatara
+- Sade Sati
+- Yogas
+- Doshas
+- Marriage analysis
+- Career analysis
+- Transit analysis
+- Remedies
+
+The PDF must preserve ALL existing report content.
+
+Do not simplify the report.
+
+Do not remove sections.
+
+Do not replace real values with static/demo values.
+
+Do not hardcode sample astrology data.
+
+If any PDF binding, rendering, page break, chart, table, typography or data issue is found, fix ONLY the relevant PDF/report presentation issue.
+
+Do not rewrite the astrology calculations.
+
+After fixing, generate the PDF again and verify it again.
+
+The final PDF must be:
+
+- real data
+- complete
+- A4
+- professionally formatted
+- no blank pages
+- no clipped sections
+- no broken charts
+- no broken tables
+- correct page breaks
+- correct Pushyalipi logo
+- no Blueprint
+- no debug text
+- no demo/mock data
+
+IMPORTANT:
+
+The REAL generated PDF is the source of truth.
+
+Do not report PDF verification as complete merely because TypeScript/build passes.
+
+At the end report exactly:
+
+REAL PDF VERIFIED
+
+or
+
+REAL PDF ISSUE FOUND AND FIXED
+
+==================================================
+TASK 2 — BLUEPRINT MUST NEVER BE PUBLIC
+==================================================
+
+Blueprint is an INTERNAL development/verification concept only.
+
+It must NOT appear anywhere in the customer-facing Pushyalipi application.
+
+Remove/hide Blueprint from:
+
+- landing page
+- navigation
+- Kundli form
+- Kundli report
+- report navigation
+- history
+- authentication
+- mobile UI
+- PDF
+- print output
+- downloadable reports
+
+The user/guest must never see:
+
+- Blueprint
+- Life Blueprint
+- Blueprint mode
+- Debug
+- QA
+- Test data
+- Mock data
+- Demo data
+- Developer mode
+
+Do not expose Blueprint through any public route or button.
+
+IMPORTANT:
+
+If the existing astrology code contains a function such as lifeBlueprint() or an internal "blueprint" identifier, DO NOT delete or rewrite the astrology engine just to remove the public UI.
+
+It is acceptable for internal code to remain if it is not exposed.
+
+The requirement is:
+
+INTERNAL CODE MAY EXIST
+BUT
+PUBLIC USER EXPERIENCE MUST HAVE ZERO BLUEPRINT UI/CONTENT.
+
+Also verify that Blueprint text cannot appear inside the generated PDF.
+
+Generate/inspect the real PDF from TASK 1 and confirm there is no Blueprint content.
+
+==================================================
+TASK 3 — GOOGLE LOGIN
+==================================================
+
+The current application needs a real professional Google sign-in experience.
+
+The desired user-facing authentication experience is:
+
+"Continue with Google"
+
+Use the existing Pushyalipi authentication architecture if one exists.
+
+IMPORTANT:
+
+DO NOT invent credentials.
+
+DO NOT expose secrets.
+
+DO NOT put OAuth secrets in frontend code.
+
+DO NOT create a fake Google login that only changes the UI.
+
+DO NOT create a new backend unnecessarily.
+
+DO NOT modify the database schema unnecessarily.
+
+First inspect the current authentication implementation and determine whether Supabase OAuth/authentication is already configured in this project.
+
+IF the existing Supabase authentication infrastructure is actually configured and available:
+
+Implement the Google sign-in button using the existing Supabase auth mechanism.
+
+The user-facing button should be:
+
+Continue with Google
+
+The authentication page should use:
+
+- uploaded official Pushyalipi logo
+- premium Pushyalipi branding
+- clean centered layout
+- "Sign in to Pushyalipi"
+- "Continue with Google"
+- professional loading state
+- proper error state
+- responsive mobile layout
+
+IF Google OAuth is NOT configured in the existing backend/Supabase project:
+
+DO NOT invent configuration or credentials.
+
+In that case:
+
+- create the correct premium Google login UI
+- connect it to the existing auth mechanism only if technically available
+- clearly report what external configuration is still required
+- do not break the current authentication flow
+
+IMPORTANT:
+
+Use the REAL Pushyalipi logo that I uploaded to this Replit project.
+
+Do NOT use:
+
+- favicon
+- placeholder icon
+- generated logo
+- random logo
+- old demo branding
+
+Use the uploaded official Pushyalipi logo asset exactly as provided.
+
+Do not alter the artwork.
+
+==================================================
+PROTECTED FILES / SYSTEMS
+==================================================
+
+Do not unnecessarily modify:
+
+src/lib/astro/*
+src/lib/storage.ts
+src/lib/geocode.ts
+src/lib/i18n.tsx
+
+Also protect:
+
+- astrology calculations
+- chart mathematics
+- planetary calculations
+- dasha calculations
+- varga calculations
+- yoga calculations
+- dosha calculations
+- prediction calculations
+- database
+- API contracts
+- API server
+- storage behavior
+- environment variables
+- existing secrets
+
+Only make the smallest required changes for these 3 tasks.
+
+==================================================
+FREE PRODUCT REQUIREMENT
+==================================================
+
+Everything remains FREE.
+
+Do NOT add:
+
+- payment
+- Stripe
+- Razorpay
+- subscription
+- weekly plan
+- monthly plan
+- yearly plan
+- marriage paid plan
+- paywall
+- credits
+- upgrade button
+- premium lock
+
+"Premium" refers ONLY to visual/product quality.
+
+==================================================
+FINAL VALIDATION
+==================================================
+
+After completing these 3 tasks:
+
+Run the existing typecheck/build.
+
+Then verify:
+
+1. App loads.
+2. Real Kundli calculation works.
+3. Complete report works.
+4. Real PDF is actually generated.
+5. PDF contains the same real data as the report.
+6. PDF contains all existing sections.
+7. PDF is A4.
+8. PDF has no broken layout.
+9. PDF has no Blueprint.
+10. Public UI has no Blueprint.
+11. Uploaded official Pushyalipi logo is used.
+12. Google login UI works as far as the existing auth configuration allows.
+13. No backend/calculation regression.
+14. Everything remains FREE.
+
+DO NOT start Part 2 after this.
+
+STOP after these 3 tasks.
+
+FINAL RESPONSE MUST CLEARLY STATE:
+
+A. REAL PDF VERIFIED / NOT VERIFIED
+B. BLUEPRINT PUBLIC UI REMOVED / NOT REMOVED
+C. GOOGLE LOGIN IMPLEMENTED / CONFIGURATION REQUIRED
+D. EXACT FILES CHANGED
+E. PROTECTED SYSTEMS LEFT UNCHANGED
+F. BUILD/TYPECHECK RESULT
+
+Do not claim something is implemented if it was only mocked or visually created.
