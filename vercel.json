@@ -1,0 +1,4 @@
+{
+  "buildCommand": "pnpm --filter @workspace/pushyalipi run build",
+  "outputDirectory": "artifacts/pushyalipi/dist/public"
+}
