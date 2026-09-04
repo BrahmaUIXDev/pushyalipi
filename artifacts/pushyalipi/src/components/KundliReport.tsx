@@ -200,7 +200,7 @@ export function KundliReport({ chart, onReset }: { chart: Chart; onReset: () => 
     setExportOpen(false);
     window.setTimeout(() => {
       window.print();
-    }, 120);
+    }, 350);
   };
 
   const chartData = (D: number) => {

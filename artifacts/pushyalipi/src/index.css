@@ -618,7 +618,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   @page { size: A4; margin: 12mm; }
   body { min-height: 0; background: hsl(var(--card)); }
   body::before { display: none !important; }
-  .site-header, .site-footer, .no-print { display: none !important; }
+  .site-header, .site-footer, .no-print,
+  [data-radix-dialog-overlay], .export-dialog { display: none !important; }
   .hidden.print\:block { display: block !important; }
   .app-shell, main.report-main, .pdf-doc { min-height: 0 !important; }
   main.report-main { padding: 0 !important; }
@@ -633,12 +634,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .pdf-block { border-color: #d8cbb8; background: #fffdf8; }
   .pdf-table th, .pdf-table td { border-color: #d8cbb8; }
   .pdf-footer { margin-bottom: 0; }
-}
-
-button.bg-primary {
-  background-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  border-color: hsl(var(--primary));
 }
 
 /* Pushyalipi editorial system
@@ -1017,4 +1012,12 @@ button {
   .pdf-title {
     font-size: 3rem;
   }
+}
+
+/* Keep the existing primary actions readable over the card surface. */
+.form-section button.bg-primary,
+.report-main button.bg-primary {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: hsl(var(--primary)) !important;
 }
