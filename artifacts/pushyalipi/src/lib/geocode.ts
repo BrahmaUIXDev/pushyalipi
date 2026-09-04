@@ -18,10 +18,10 @@ export function estimateTimezone(lat: number, lon: number, label: string): numbe
   return Math.round((lon / 15) * 2) / 2;
 }
 
-export async function searchPlaces(query: string): Promise<GeoResult[]> {
+export async function searchPlaces(query: string, signal?: AbortSignal): Promise<GeoResult[]> {
   if (query.trim().length < 3) return [];
   const url = `https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=1&q=${encodeURIComponent(query)}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  const res = await fetch(url, { headers: { Accept: "application/json" }, signal });
   if (!res.ok) throw new Error(`Geocoding failed (${res.status})`);
   const json = (await res.json()) as { display_name: string; lat: string; lon: string }[];
   return json.map((r) => {

@@ -113,7 +113,7 @@ function AuthDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open
   );
 }
 
-function Home({ chart, onSubmit, onReset }: { chart: Chart | null; onSubmit: (input: BirthInput) => void; onReset: () => void }) {
+function Home({ chart, onSubmit, onReset }: { chart: Chart | null; onSubmit: (input: BirthInput) => boolean; onReset: () => void }) {
   const { t } = useI18n();
   return (
     <div className="app-shell">
@@ -164,12 +164,27 @@ function HistoryPage({ onLoad }: { onLoad: (chart: SavedChart) => void }) {
     const timer = window.setTimeout(() => { setSaved(listSaved()); setLoading(false); }, 280);
     return () => window.clearTimeout(timer);
   }, []);
+  const loadChart = (item: SavedChart) => {
+    try {
+      setSaved(markChartViewed(item.id));
+      onLoad(item);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not open this chart.");
+    }
+  };
+  const removeChart = (id: string) => {
+    try {
+      setSaved(deleteChart(id));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not remove this chart.");
+    }
+  };
   return (
     <div className="app-shell">
       <SiteHeader />
       <main className="history-main">
         <div className="history-heading"><div><p className="section-kicker">YOUR PRIVATE LIBRARY</p><h1>Saved kundlis</h1><p>Return to a reading whenever you need its perspective.</p></div><Button onClick={() => setLocation("/")} className="gap-2" data-testid="button-create-new-chart"><Sparkles className="size-4" /> New kundli</Button></div>
-        {loading ? <div className="history-grid" data-testid="status-history-loading">{[1, 2, 3].map((item) => <div className="history-skeleton" key={item} />)}</div> : saved.length === 0 ? <div className="history-empty" data-testid="status-history-empty"><span className="empty-orbit"><Clock3 className="size-6" /></span><h2>Your library is quiet.</h2><p>Generate your first kundli and it will appear here, saved privately in this browser.</p><Button onClick={() => setLocation("/")} variant="outline" data-testid="button-empty-create">Create your first chart</Button></div> : <div className="history-grid">{saved.map((item) => <article className="history-card" key={item.id} data-testid={`card-saved-chart-${item.id}`}><div className="history-card-mark"><Sparkles className="size-4" /></div><div className="history-card-body"><p className="history-card-date">{new Date(item.lastViewedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</p><h2>{item.name}</h2><p>{item.date} · {item.time}</p><p className="history-place">{item.place}</p></div><div className="history-card-actions"><Button size="sm" onClick={() => { setSaved(markChartViewed(item.id)); onLoad(item); }} data-testid={`button-load-chart-${item.id}`}>Open reading <ArrowRight className="size-3.5" /></Button><Button size="sm" variant="ghost" onClick={() => setSaved(deleteChart(item.id))} data-testid={`button-delete-chart-${item.id}`}>Remove</Button></div></article>)}</div>}
+        {loading ? <div className="history-grid" data-testid="status-history-loading">{[1, 2, 3].map((item) => <div className="history-skeleton" key={item} />)}</div> : saved.length === 0 ? <div className="history-empty" data-testid="status-history-empty"><span className="empty-orbit"><Clock3 className="size-6" /></span><h2>Your library is quiet.</h2><p>Generate your first kundli and it will appear here, saved privately in this browser.</p><Button onClick={() => setLocation("/")} variant="outline" data-testid="button-empty-create">Create your first chart</Button></div> : <div className="history-grid">{saved.map((item) => <article className="history-card" key={item.id} data-testid={`card-saved-chart-${item.id}`}><div className="history-card-mark"><Sparkles className="size-4" /></div><div className="history-card-body"><p className="history-card-date">{new Date(item.lastViewedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</p><h2>{item.name}</h2><p>{item.date} · {item.time}</p><p className="history-place">{item.place}</p></div><div className="history-card-actions"><Button size="sm" onClick={() => loadChart(item)} data-testid={`button-load-chart-${item.id}`}>Open reading <ArrowRight className="size-3.5" /></Button><Button size="sm" variant="ghost" onClick={() => removeChart(item.id)} data-testid={`button-delete-chart-${item.id}`}>Remove</Button></div></article>)}</div>}
       </main>
       <footer className="site-footer"><span>Pushyalipi · Your chart, computed with care</span><span>Private by design</span></footer>
     </div>
@@ -193,14 +208,16 @@ function AuthPage() {
 function AppContent() {
   const [chart, setChart] = useState<Chart | null>(null);
   const [, setLocation] = useLocation();
-  const handleSubmit = (input: BirthInput) => {
+  const handleSubmit = (input: BirthInput): boolean => {
     try {
       setChart(computeChart(input));
       setLocation("/");
       window.scrollTo({ top: 0, behavior: "smooth" });
+      return true;
     } catch (error) {
       console.error(error);
       toast.error("Could not compute this chart. Please check the birth details.");
+      return false;
     }
   };
   return (

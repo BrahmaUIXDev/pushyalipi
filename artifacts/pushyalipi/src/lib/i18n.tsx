@@ -143,9 +143,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>("en");
 
   useEffect(() => {
-    const saved = localStorage.getItem("pushyalipi-lang") as Lang | null;
-    if (saved) setLang(saved);
+    try {
+      const saved = localStorage.getItem("pushyalipi-lang") as Lang | null;
+      if (saved === "en" || saved === "or" || saved === "hi") setLang(saved);
+    } catch {
+      // The app can continue with English when browser storage is unavailable.
+    }
   }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   const value = useMemo<Ctx>(() => {
     const i = idx(lang);
@@ -153,7 +161,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       lang,
       setLang: (l) => {
         setLang(l);
-        localStorage.setItem("pushyalipi-lang", l);
+        try {
+          localStorage.setItem("pushyalipi-lang", l);
+        } catch {
+          // Language changes still apply for this session if storage is blocked.
+        }
       },
       t: (key) => UI[key as string]?.[i] ?? (key as string),
       tSign: (s) => SIGNS_I18N[s]?.[i] ?? "",

@@ -2,6 +2,8 @@ import type { BirthInput } from "./astro/vedic";
 
 const KEY = "pushyalipi-charts";
 const MAX_SAVED = 50;
+const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+const TIME_PATTERN = /^(\d{2}):(\d{2})$/;
 
 export interface SavedChart extends BirthInput {
   id: string;
@@ -13,17 +15,50 @@ export interface SavedChart extends BirthInput {
 function validBirthInput(value: unknown): value is BirthInput {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
+  const date = typeof v.date === "string" ? v.date.match(DATE_PATTERN) : null;
+  const time = typeof v.time === "string" ? v.time.match(TIME_PATTERN) : null;
+  const year = date ? Number(date[1]) : NaN;
+  const month = date ? Number(date[2]) : NaN;
+  const day = date ? Number(date[3]) : NaN;
+  const hour = time ? Number(time[1]) : NaN;
+  const minute = time ? Number(time[2]) : NaN;
+  const parsedDate = date ? new Date(0) : null;
+  if (parsedDate) {
+    parsedDate.setUTCFullYear(year, month - 1, day);
+    parsedDate.setUTCHours(0, 0, 0, 0);
+  }
   return (
     typeof v.name === "string" &&
-    typeof v.date === "string" &&
-    typeof v.time === "string" &&
+    v.name.trim().length > 0 &&
+    date !== null &&
+    year >= 1 &&
+    year <= 9999 &&
+    month >= 1 &&
+    month <= 12 &&
+    day >= 1 &&
+    parsedDate !== null &&
+    parsedDate.getUTCFullYear() === year &&
+    parsedDate.getUTCMonth() === month - 1 &&
+    parsedDate.getUTCDate() === day &&
+    time !== null &&
+    hour >= 0 &&
+    hour <= 23 &&
+    minute >= 0 &&
+    minute <= 59 &&
     typeof v.place === "string" &&
+    v.place.trim().length > 0 &&
     typeof v.latitude === "number" &&
     Number.isFinite(v.latitude) &&
+    v.latitude >= -90 &&
+    v.latitude <= 90 &&
     typeof v.longitude === "number" &&
     Number.isFinite(v.longitude) &&
+    v.longitude >= -180 &&
+    v.longitude <= 180 &&
     typeof v.tzOffset === "number" &&
     Number.isFinite(v.tzOffset) &&
+    v.tzOffset >= -14 &&
+    v.tzOffset <= 14 &&
     (v.timezone === undefined || typeof v.timezone === "string")
   );
 }
@@ -48,8 +83,13 @@ function createId(): string {
 
 function writeSaved(charts: SavedChart[]): SavedChart[] {
   if (typeof window === "undefined") return charts;
-  localStorage.setItem(KEY, JSON.stringify(charts.slice(0, MAX_SAVED)));
-  return charts.slice(0, MAX_SAVED);
+  const limited = charts.slice(0, MAX_SAVED);
+  try {
+    localStorage.setItem(KEY, JSON.stringify(limited));
+    return limited;
+  } catch {
+    throw new Error("Could not save charts in this browser. Storage may be full or blocked.");
+  }
 }
 
 export function listSaved(): SavedChart[] {
@@ -67,6 +107,9 @@ export function listSaved(): SavedChart[] {
 }
 
 export function saveChart(input: BirthInput): SavedChart[] {
+  if (!validBirthInput(input)) {
+    throw new Error("Cannot save invalid birth details.");
+  }
   const list = listSaved();
   const now = new Date().toISOString();
   const duplicate = list.find(

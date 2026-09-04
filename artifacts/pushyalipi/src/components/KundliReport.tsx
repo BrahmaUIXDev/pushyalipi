@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, CheckCircle2, ChevronRight, Download, FileText, RotateCcw, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -195,10 +195,18 @@ export function KundliReport({ chart, onReset }: { chart: Chart; onReset: () => 
     () => [marriageReport(chart), careerReport(chart), transitReport(chart), remediesReport(chart)],
     [chart],
   );
+  const printTimer = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (printTimer.current) window.clearTimeout(printTimer.current);
+    };
+  }, []);
 
   const printReport = () => {
     setExportOpen(false);
-    window.setTimeout(() => {
+    if (printTimer.current) window.clearTimeout(printTimer.current);
+    printTimer.current = window.setTimeout(() => {
       window.print();
     }, 350);
   };

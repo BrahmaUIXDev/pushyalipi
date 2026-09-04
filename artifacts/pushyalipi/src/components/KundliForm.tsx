@@ -20,7 +20,7 @@ import {
 } from "@/lib/storage";
 import type { BirthInput } from "@/lib/astro/vedic";
 
-export function KundliForm({ onSubmit }: { onSubmit: (input: BirthInput) => void }) {
+export function KundliForm({ onSubmit }: { onSubmit: (input: BirthInput) => boolean }) {
   const { t } = useI18n();
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
@@ -36,35 +36,64 @@ export function KundliForm({ onSubmit }: { onSubmit: (input: BirthInput) => void
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState<SavedChart[]>([]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const submitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchRequest = useRef(0);
+  const searchController = useRef<AbortController | null>(null);
 
   useEffect(() => setSaved(listSaved()), []);
 
   useEffect(() => {
+    const requestId = ++searchRequest.current;
     if (timer.current) clearTimeout(timer.current);
+    searchController.current?.abort();
     if (query.trim().length < 3 || place?.label === query) {
       setResults([]);
+      setSearching(false);
       return;
     }
     timer.current = setTimeout(async () => {
+      const controller = new AbortController();
+      searchController.current = controller;
       setSearching(true);
       try {
-        setResults(await searchPlaces(query));
-      } catch {
-        toast.error("Location lookup failed. Check your connection.");
+        const nextResults = await searchPlaces(query, controller.signal);
+        if (requestId === searchRequest.current) setResults(nextResults);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        if (requestId === searchRequest.current) {
+          toast.error("Location lookup failed. Check your connection.");
+        }
       } finally {
-        setSearching(false);
+        if (requestId === searchRequest.current) setSearching(false);
       }
     }, 550);
     return () => {
       if (timer.current) clearTimeout(timer.current);
+      if (requestId === searchRequest.current) searchController.current?.abort();
     };
   }, [query, place]);
 
-  const resolvedTime = () => {
-    if (use24h) return time;
-    const h = parseInt(hour12 || "0", 10) % 12;
-    const hh = ampm === "PM" ? h + 12 : h;
-    return `${String(hh).padStart(2, "0")}:${String(parseInt(minute || "0", 10)).padStart(2, "0")}`;
+  useEffect(() => {
+    return () => {
+      if (submitTimer.current) clearTimeout(submitTimer.current);
+      searchController.current?.abort();
+    };
+  }, []);
+
+  const resolvedTime = (): string | null => {
+    if (use24h) {
+      const match = time.match(/^(\d{2}):(\d{2})$/);
+      if (!match) return null;
+      const hour = Number(match[1]);
+      const minute = Number(match[2]);
+      return hour <= 23 && minute <= 59 ? time : null;
+    }
+    if (!/^\d{1,2}$/.test(hour12) || !/^\d{1,2}$/.test(minute)) return null;
+    const hour = Number(hour12);
+    const minutes = Number(minute);
+    if (hour < 1 || hour > 12 || minutes < 0 || minutes > 59) return null;
+    const hh = ampm === "PM" ? (hour % 12) + 12 : hour % 12;
+    return `${String(hh).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
   };
 
   const submit = () => {
@@ -73,8 +102,9 @@ export function KundliForm({ onSubmit }: { onSubmit: (input: BirthInput) => void
       toast.error("Please fill name, date, time and birth place.");
       return;
     }
+    if (submitTimer.current) clearTimeout(submitTimer.current);
     setLoading(true);
-    setTimeout(() => {
+    submitTimer.current = setTimeout(() => {
       const input: BirthInput = {
         name: name.trim(),
         date,
@@ -85,9 +115,13 @@ export function KundliForm({ onSubmit }: { onSubmit: (input: BirthInput) => void
         ...(place.timezone ? { timezone: place.timezone } : {}),
         place: place.label,
       };
-      onSubmit(input);
-      setSaved(saveChart(input));
-      setLoading(false);
+      try {
+        if (onSubmit(input)) setSaved(saveChart(input));
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not save this chart.");
+      } finally {
+        setLoading(false);
+      }
     }, 350);
   };
 
@@ -97,8 +131,10 @@ export function KundliForm({ onSubmit }: { onSubmit: (input: BirthInput) => void
     const link = document.createElement("a");
     link.href = url;
     link.download = "pushyalipi-saved-charts.json";
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const importSaved = async (file: File | undefined) => {
@@ -239,7 +275,11 @@ export function KundliForm({ onSubmit }: { onSubmit: (input: BirthInput) => void
                   className="sr-only"
                   type="file"
                   accept="application/json,.json"
-                  onChange={(event) => void importSaved(event.target.files?.[0])}
+                  onChange={(event) => {
+                    const file = event.currentTarget.files?.[0];
+                    event.currentTarget.value = "";
+                    void importSaved(file);
+                  }}
                 />
               </label>
             </div>
@@ -267,8 +307,12 @@ export function KundliForm({ onSubmit }: { onSubmit: (input: BirthInput) => void
                    size="sm"
                    variant="secondary"
                    onClick={() => {
-                     setSaved(markChartViewed(c.id));
-                     onSubmit(c);
+                     try {
+                       setSaved(markChartViewed(c.id));
+                       onSubmit(c);
+                     } catch (error) {
+                       toast.error(error instanceof Error ? error.message : "Could not open this chart.");
+                     }
                    }}
                  >
                   {t("load")}
@@ -293,8 +337,14 @@ export function KundliForm({ onSubmit }: { onSubmit: (input: BirthInput) => void
                 <Button
                   size="icon"
                   variant="ghost"
-                  aria-label={t("delete")}
-                  onClick={() => setSaved(deleteChart(c.id))}
+                   aria-label={t("delete")}
+                   onClick={() => {
+                     try {
+                       setSaved(deleteChart(c.id));
+                     } catch (error) {
+                       toast.error(error instanceof Error ? error.message : "Could not remove this chart.");
+                     }
+                   }}
                 >
                   <Trash2 className="size-4" />
                 </Button>
